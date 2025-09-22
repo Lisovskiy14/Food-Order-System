@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Замовлення</title>
+</head>
+<body>
+
+<h1>Активні замовлення:</h1>
+<div th:each="order : ${orders}" th:text="${order.customer.firstName} + ' '
++ ${order.customer.lastName} + ' на суму ' + ${order.totalPrice} + ' грн'"></div>
+
+
+</body>
+</html>

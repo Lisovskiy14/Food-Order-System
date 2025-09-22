@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Меню</title>
+</head>
+<body>
+
+<h1>Додати позицію</h1>
+<form action="/menu/addItem" method="post">
+    <label for="name">Назва: </label>
+    <input type="text" id="name" name="name" required>
+
+    <br><br>
+
+    <label for="price">Ціна: </label>
+    <input type="text" id="price" name="price" required>
+
+    <br><br>
+
+    <button type="submit">Додати</button>
+</form>
+
+<h1>Доступні позиції:</h1>
+<div th:each="item : ${menu}" th:text="${item.name} + ' ' + ${item.price} + ' грн'"></div>
+
+
+</body>
+</html>
