@@ -1,15 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Замовлення</title>
+    <title>Активні Замовлення</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
+<div class="container">
+    <header>
+        <h1>Адмін-панель</h1>
+        <nav>
+            <a th:href="@{/admin/menu}">Керування Меню</a>
+            <a th:href="@{/admin/orders}">Активні Замовлення</a>
+        </nav>
+    </header>
 
-<h1>Активні замовлення:</h1>
-<div th:each="order : ${orders}" th:text="${order.customer.firstName} + ' '
-+ ${order.customer.lastName} + ' на суму ' + ${order.totalPrice} + ' грн'"></div>
+    <h2>Активні Замовлення</h2>
+    <div class="order-list">
+        <div th:if="${orders.isEmpty()}">
+            <p>Наразі немає активних замовлень.</p>
+        </div>
 
-
+        <div th:each="order : ${orders}" class="order-card">
+            <div class="order-details">
+                <h3 th:text="'Замовлення #' + ${order.id}">Замовлення #ID</h3>
+                <p th:text="'Клієнт: ' + ${order.customer?.firstName} + ' ' + ${order.customer?.lastName}">Клієнт: ...</p>
+                <ul>
+                    <li th:each="item : ${order.items}" th:text="${item.name}">Елемент 1</li>
+                </ul>
+            </div>
+            <div class="order-actions">
+                <form th:action="@{/admin/orders/confirm}" method="post">
+                    <input type="hidden" name="orderId" th:value="${order.id}" />
+                    <button type="submit">Підтвердити</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

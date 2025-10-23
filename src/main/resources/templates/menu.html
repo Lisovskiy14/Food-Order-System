@@ -1,29 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Меню</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
+<div class="container">
+    <header>
+        <h1>Наше Меню</h1>
+    </header>
 
-<h1>Додати позицію</h1>
-<form action="/menu/addItem" method="post">
-    <label for="name">Назва: </label>
-    <input type="text" id="name" name="name" required>
+    <h2>Створити нове замовлення</h2>
+    <form th:action="@{/order}" method="post" th:object="${customer}">
+        <div class="form-group">
+            <label for="firstName">Ваше ім'я:</label>
+            <input type="text" id="firstName" th:field="*{firstName}" placeholder="Іван" required>
+        </div>
+        <div class="form-group">
+            <label for="lastName">Ваше прізвище:</label>
+            <input type="text" id="lastName" th:field="*{lastName}" placeholder="Петренко" required>
+        </div>
+        <button type="submit">Почати замовлення</button>
+    </form>
 
-    <br><br>
+    <hr>
 
-    <label for="price">Ціна: </label>
-    <input type="text" id="price" name="price" required>
-
-    <br><br>
-
-    <button type="submit">Додати</button>
-</form>
-
-<h1>Доступні позиції:</h1>
-<div th:each="item : ${menu}" th:text="${item.name} + ' ' + ${item.price} + ' грн'"></div>
-
-
+    <h2>Ознайомтеся з меню</h2>
+    <div class="item-list">
+        <div th:each="item : ${menu}" class="item-card">
+            <div class="item-details">
+                <h3 th:text="${item.name}">Назва елементу</h3>
+            </div>
+            <div class="item-actions">
+                <b th:text="${#numbers.formatDecimal(item.price, 1, 2) + ' грн'}">0.00 грн</b>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

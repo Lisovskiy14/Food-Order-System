@@ -8,11 +8,15 @@ import org.example.foodordersystem.service.OrderService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
+@RequestMapping("/admin")
 public class AdminController {
 
     private final MenuService menuService;
@@ -21,13 +25,13 @@ public class AdminController {
     @PostMapping("/menu/addItem")
     public String addItemToMenu(Item item) {
         menuService.addItem(item);
-        return "redirect:/menu";
+        return "redirect:/admin/menu";
     }
 
     @PostMapping("/menu/deleteItem")
-    public String deleteItemFromMenu(@RequestBody Item item) {
-        menuService.deleteItem(item);
-        return "redirect:/menu";
+    public String deleteItemFromMenu(@RequestParam("itemId") UUID itemId) {
+        menuService.deleteItem(itemId);
+        return "redirect:/admin/menu";
     }
 
     @GetMapping("/orders")
@@ -37,8 +41,15 @@ public class AdminController {
     }
 
     @PostMapping("/orders/confirm")
-    public String confirmOrder(@RequestBody Order order) {
-        orderService.completeOrder(order);
-        return "redirect:/orders";
+    public String confirmOrder(@RequestParam("orderId") UUID orderId) {
+        orderService.completeOrder(orderId);
+        return "redirect:/admin/orders";
+    }
+
+    @GetMapping("/menu")
+    public ModelAndView showMenu() {
+        return new ModelAndView("admin-menu")
+                .addObject("menu", menuService.getMenu())
+                .addObject("newItem", new Item());
     }
 }
