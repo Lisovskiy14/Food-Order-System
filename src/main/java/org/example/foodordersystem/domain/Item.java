@@ -13,5 +13,6 @@ public class Item {
 
     private UUID id;
     private String name;
+    private String description;
     private double price;
 }
