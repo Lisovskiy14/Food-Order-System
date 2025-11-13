@@ -1,48 +1,18 @@
 package org.example.foodordersystem.service;
 
-import lombok.RequiredArgsConstructor;
-import org.example.foodordersystem.domain.*;
-import org.springframework.stereotype.Service;
+import org.example.foodordersystem.domain.Order;
+import org.example.foodordersystem.dto.order.ManageOrderItemRequestDto;
+import org.example.foodordersystem.dto.order.OrderRequestDto;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Service
-@RequiredArgsConstructor
-public class OrderService {
-
-    private final OrderRepository orderRepository;
-    private final ItemRepository itemRepository;
-
-    public Order createOrder(Customer customer) {
-        Order order = Order.builder()
-                .id(UUID.randomUUID())
-                .customer(customer)
-                .items(new ArrayList<>())
-                .totalPrice(0)
-                .build();
-        orderRepository.saveOrder(order);
-        return order;
-    }
-
-    public Order addItemToOrder(UUID orderId, UUID itemId) {
-        return orderRepository.getOrder(orderId)
-                .addItem(itemRepository.getItem(itemId));
-    }
-
-    public void sendOrder(Order order) {
-        if (order.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Order must have at least one item");
-        }
-        orderRepository.saveOrder(order);
-    }
-
-    public List<Order> getAllOrders() {
-        return orderRepository.getAllOrders();
-    }
-
-    public void completeOrder(UUID id) {
-        orderRepository.deleteOrder(id);
-    }
+public interface OrderService {
+    List<Order> getAllOrders();
+    List<Order> getOrdersByCustomerId(UUID customerId);
+    Order getOrderById(UUID id);
+    Order saveOrder(OrderRequestDto orderRequestDto);
+    Order addItemToOrder(ManageOrderItemRequestDto manageOrderItemRequestDto);
+    Order removeItemFromOrder(ManageOrderItemRequestDto manageOrderItemRequestDto);
+    void deleteOrderById(UUID id);
 }
