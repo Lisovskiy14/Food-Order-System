@@ -3,7 +3,6 @@ package org.example.foodordersystem.web;
 import lombok.extern.slf4j.Slf4j;
 import org.example.foodordersystem.service.exception.ResourceNotFoundException;
 import org.example.foodordersystem.util.ProblemDetailBuilder;
-import org.example.foodordersystem.util.RequestValidationUtil;
 import org.example.foodordersystem.web.exception.ParamsValidationDetails;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,8 +38,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .type("urn:problem-type:validation-error")
                 .title("Validation Error")
                 .detail("Request Validation Failed")
+                .property("validationDetails", validationDetails)
                 .build();
-        problemDetail.setProperty("validationDetails", validationDetails);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.APPLICATION_JSON)
