@@ -32,7 +32,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item saveItem(Item item) {
-        item.setId(UUID.randomUUID());
         return itemRepository.saveItem(item);
     }
 

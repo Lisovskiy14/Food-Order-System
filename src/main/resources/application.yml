@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: FoodOrderSystem
+  datasource:
+    url: jdbc:postgresql://localhost:5432/food-order-system-db
+    username: postgres
+    password: 123456

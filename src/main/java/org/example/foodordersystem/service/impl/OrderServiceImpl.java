@@ -10,11 +10,12 @@ import org.example.foodordersystem.service.CustomerService;
 import org.example.foodordersystem.service.ItemService;
 import org.example.foodordersystem.service.OrderService;
 import org.example.foodordersystem.service.exception.OrderNotFoundException;
+import org.example.foodordersystem.service.repository.OrderItemRepository;
 import org.example.foodordersystem.service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CustomerService customerService;
     private final ItemService itemService;
 
@@ -45,6 +47,7 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    @Transactional
     @Override
     public Order saveOrder(OrderRequestDto orderRequestDto) {
         UUID id = customerService.getCustomerById(UUID.fromString(
@@ -53,28 +56,29 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .id(UUID.randomUUID())
                 .customerId(id)
+                .totalPrice(0.0)
                 .build();
+
+        orderRepository.saveOrder(order);
+
+        // Імітуємо помилку після збереження вище
+        if (order.getId() != null) {
+            throw new RuntimeException("Test");
+        }
 
         Set<OrderItem> orderItems = orderRequestDto.getOrderItems().stream()
                         .map(requestOrderItem -> OrderItem.builder()
                                 .id(UUID.randomUUID())
                                 .orderId(order.getId())
-                                .itemId(itemService.getItemById(
-                                        UUID.fromString(requestOrderItem.getItemId()))
-                                        .getId())
+                                .itemId(UUID.fromString(requestOrderItem.getItemId()))
                                 .quantity(requestOrderItem.getQuantity())
                                 .build())
                         .collect(Collectors.toSet());
 
-        Optional<Double> totalPrice = orderItems.stream()
-                        .map(orderItem -> itemService.getItemById(orderItem.getItemId()).getPrice()
-                                * orderItem.getQuantity())
-                        .reduce(Double::sum);
+        orderItemRepository.saveOrderItems(orderItems);
 
         order.setOrderItems(orderItems);
-        totalPrice.ifPresent(order::setTotalPrice);
-
-        return orderRepository.saveOrder(order);
+        return orderRepository.setOrderTotalPrice(order);
     }
 
     @Override

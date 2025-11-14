@@ -31,7 +31,6 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer saveCustomer(Customer customer) {
-        customer.setId(UUID.randomUUID());
         return customerRepository.saveCustomer(customer);
     }
 
