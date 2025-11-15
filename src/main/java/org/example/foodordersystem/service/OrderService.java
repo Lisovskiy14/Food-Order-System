@@ -11,7 +11,7 @@ public interface OrderService {
     List<Order> getAllOrders();
     List<Order> getOrdersByCustomerId(UUID customerId);
     Order getOrderById(UUID id);
-    Order saveOrder(OrderRequestDto orderRequestDto);
+    Order createOrder(OrderRequestDto orderRequestDto);
     Order addItemToOrder(ManageOrderItemRequestDto manageOrderItemRequestDto);
     Order removeItemFromOrder(ManageOrderItemRequestDto manageOrderItemRequestDto);
     void deleteOrderById(UUID id);

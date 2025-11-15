@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.foodordersystem.domain.Item;
 import org.example.foodordersystem.dto.item.ItemUpdateRequestDto;
 import org.example.foodordersystem.service.ItemService;
+import org.example.foodordersystem.service.exception.ItemNameAlreadyExistsException;
 import org.example.foodordersystem.service.exception.ItemNotFoundException;
 import org.example.foodordersystem.service.repository.ItemRepository;
 import org.springframework.stereotype.Service;
@@ -18,22 +19,21 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<Item> getAllItems() {
-        return itemRepository.getAllItems();
+        return itemRepository.findAll();
     }
 
     @Override
     public Item getItemById(UUID id) {
-        Item item = itemRepository.getItemById(id);
-        if (item == null) {
-            throw new ItemNotFoundException(id.toString());
-        }
-        return item;
+        return itemRepository.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException(id.toString()));
     }
 
     @Override
-    public Item saveItem(Item item) {
-        item.setId(UUID.randomUUID());
-        return itemRepository.saveItem(item);
+    public Item createItem(Item item) {
+        if (itemRepository.existsByName(item.getName())) {
+            throw new ItemNameAlreadyExistsException(item.getName());
+        }
+        return itemRepository.save(item);
     }
 
     @Override
@@ -47,11 +47,11 @@ public class ItemServiceImpl implements ItemService {
             item.setPrice(itemUpdateRequestDto.getPrice());
         }
 
-        return itemRepository.saveItem(item);
+        return itemRepository.save(item);
     }
 
     @Override
     public void deleteItemById(UUID id) {
-        itemRepository.deleteItemById(id);
+        itemRepository.deleteById(id);
     }
 }

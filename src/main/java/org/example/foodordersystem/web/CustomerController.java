@@ -45,7 +45,7 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(customerMapper.toCustomerResponseDto(
-                        customerService.saveCustomer(customer)));
+                        customerService.createCustomer(customer)));
     }
 
     @DeleteMapping("/{customerId}")

@@ -1,17 +1,33 @@
 package org.example.foodordersystem.domain;
 
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 
 @Data
+@Entity
+@Table(name = "orders")
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Order {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private UUID customerId;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.REMOVE)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Set<OrderItem> orderItems;
-    private double totalPrice;
+
+    @Column(name = "total_price", nullable = false)
+    private BigDecimal totalPrice;
 }

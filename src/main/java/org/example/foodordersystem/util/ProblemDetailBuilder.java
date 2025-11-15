@@ -1,17 +1,19 @@
 package org.example.foodordersystem.util;
 
-import lombok.Builder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
-//@Builder
+
 public class ProblemDetailBuilder {
     private HttpStatus status;
-    private String type;
+    private URI type;
     private String title;
     private String detail;
+    private Map<String, Object> properties = new HashMap<>();
 
     public static ProblemDetailBuilder builder() {
         return new ProblemDetailBuilder();
@@ -23,7 +25,7 @@ public class ProblemDetailBuilder {
     }
 
     public ProblemDetailBuilder type(String type) {
-        this.type = type;
+        this.type = URI.create(type);
         return this;
     }
 
@@ -37,10 +39,20 @@ public class ProblemDetailBuilder {
         return this;
     }
 
+    public ProblemDetailBuilder property(String name, Object value) {
+        this.properties.put(name, value);
+        return this;
+    }
+
     public ProblemDetail build() {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
-        problemDetail.setType(URI.create(type));
+        problemDetail.setType(type);
         problemDetail.setTitle(title);
+
+        if (!properties.isEmpty()) {
+            properties.forEach(problemDetail::setProperty);
+        }
+
         return problemDetail;
     }
 }

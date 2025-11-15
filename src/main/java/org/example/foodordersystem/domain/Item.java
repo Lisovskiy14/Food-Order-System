@@ -1,18 +1,27 @@
 package org.example.foodordersystem.domain;
 
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
+
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Entity
+@Table(name = "items")
 public class Item {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
+
+    @Column(name = "description", nullable = false)
     private String description;
-    private double price;
+
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
 }

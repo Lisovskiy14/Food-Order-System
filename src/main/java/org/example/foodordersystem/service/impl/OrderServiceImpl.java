@@ -1,34 +1,38 @@
 package org.example.foodordersystem.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.foodordersystem.domain.Item;
 import org.example.foodordersystem.domain.Order;
 import org.example.foodordersystem.domain.OrderItem;
 import org.example.foodordersystem.dto.order.ManageOrderItemRequestDto;
+import org.example.foodordersystem.dto.order.OrderItemRequestDto;
 import org.example.foodordersystem.dto.order.OrderRequestDto;
-import org.example.foodordersystem.service.CustomerService;
-import org.example.foodordersystem.service.ItemService;
 import org.example.foodordersystem.service.OrderService;
+import org.example.foodordersystem.service.exception.CustomerNotFoundException;
+import org.example.foodordersystem.service.exception.ItemNotFoundException;
 import org.example.foodordersystem.service.exception.OrderNotFoundException;
+import org.example.foodordersystem.service.repository.CustomerRepository;
+import org.example.foodordersystem.service.repository.ItemRepository;
 import org.example.foodordersystem.service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
-    private final CustomerService customerService;
-    private final ItemService itemService;
+    private final CustomerRepository customerRepository;
+    private final ItemRepository itemRepository;
 
     @Override
     public List<Order> getAllOrders() {
-        return orderRepository.getAllOrders();
+        return orderRepository.findAll();
     }
 
     @Override
@@ -38,93 +42,114 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order getOrderById(UUID id) {
-        Order order = orderRepository.getOrderById(id);
-        if (order == null) {
-            throw new OrderNotFoundException(id.toString());
-        }
-        return order;
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id.toString()));
     }
 
     @Override
-    public Order saveOrder(OrderRequestDto orderRequestDto) {
-        UUID id = customerService.getCustomerById(UUID.fromString(
-                orderRequestDto.getCustomerId())).getId();
+    @Transactional
+    public Order createOrder(OrderRequestDto orderRequestDto) {
+        UUID customerId = UUID.fromString(orderRequestDto.getCustomerId());
+        if (!customerRepository.existsById(customerId)) {
+            throw new CustomerNotFoundException(customerId.toString());
+        }
+
+        Set<UUID> itemIds = orderRequestDto.getOrderItems().stream()
+                .map(OrderItemRequestDto::getItemId)
+                .map(UUID::fromString)
+                .collect(Collectors.toSet());
+
+        Map<UUID, Item> itemsMap = itemRepository.findAllByIdSet(itemIds).stream()
+                .collect(Collectors.toMap(Item::getId, item -> item));
 
         Order order = Order.builder()
-                .id(UUID.randomUUID())
-                .customerId(id)
+                .customer(customerRepository.getReferenceById(customerId))
+                .orderItems(Set.of())
                 .build();
 
         Set<OrderItem> orderItems = orderRequestDto.getOrderItems().stream()
-                        .map(requestOrderItem -> OrderItem.builder()
-                                .id(UUID.randomUUID())
-                                .orderId(order.getId())
-                                .itemId(itemService.getItemById(
-                                        UUID.fromString(requestOrderItem.getItemId()))
-                                        .getId())
-                                .quantity(requestOrderItem.getQuantity())
-                                .build())
-                        .collect(Collectors.toSet());
-
-        Optional<Double> totalPrice = orderItems.stream()
-                        .map(orderItem -> itemService.getItemById(orderItem.getItemId()).getPrice()
-                                * orderItem.getQuantity())
-                        .reduce(Double::sum);
-
+                .map(requestOrderItem -> {
+                    UUID itemId = UUID.fromString(requestOrderItem.getItemId());
+                    if (!itemsMap.containsKey(itemId)) {
+                        throw new ItemNotFoundException(itemId.toString());
+                    }
+                    return OrderItem.builder()
+                            .order(order)
+                            .item(itemsMap.get(itemId))
+                            .quantity(requestOrderItem.getQuantity())
+                            .build();
+                })
+                .collect(Collectors.toSet());
         order.setOrderItems(orderItems);
-        totalPrice.ifPresent(order::setTotalPrice);
 
-        return orderRepository.saveOrder(order);
+        BigDecimal totalPrice = orderItems.stream()
+                .map(orderItem -> orderItem.getItem().getPrice()
+                        .multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setTotalPrice(totalPrice);
+
+        log.info("New Order with id '{}' has been created'", order.getId());
+        return orderRepository.save(order);
     }
 
     @Override
+    @Transactional
     public Order addItemToOrder(ManageOrderItemRequestDto manageOrderItemRequestDto) {
         Order order = getOrderById(UUID.fromString(
                 manageOrderItemRequestDto.getOrderId()));
+
+        UUID itemId = UUID.fromString(manageOrderItemRequestDto.getItemId());
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(itemId.toString()));
+
+
         Set<OrderItem> orderItems = order.getOrderItems();
-
-        Item item = itemService.getItemById(
-                UUID.fromString(manageOrderItemRequestDto.getItemId()));
-
         orderItems.add(OrderItem.builder()
-                .orderId(order.getId())
-                .itemId(item.getId())
+                .order(order)
+                .item(item)
                 .quantity(manageOrderItemRequestDto.getQuantity())
                 .build());
+
         order.setOrderItems(orderItems);
+        order.setTotalPrice(order.getTotalPrice()
+                .add(item.getPrice().multiply(
+                        BigDecimal.valueOf(manageOrderItemRequestDto.getQuantity())))
+        );
 
-        order.setTotalPrice(order.getTotalPrice() + (item.getPrice() * manageOrderItemRequestDto.getQuantity()));
-
-        return orderRepository.saveOrder(order);
+        log.info("New OrderItem has been added to Order with id '{}'", order.getId());
+        return orderRepository.save(order);
     }
 
     @Override
+    @Transactional
     public Order removeItemFromOrder(ManageOrderItemRequestDto manageOrderItemRequestDto) {
         Order order = getOrderById(UUID.fromString(
                 manageOrderItemRequestDto.getOrderId()));
+
+        UUID itemId = UUID.fromString(manageOrderItemRequestDto.getItemId());
+
         Set<OrderItem> orderItems = order.getOrderItems();
-
-        Item item = itemService.getItemById(UUID.fromString(manageOrderItemRequestDto.getItemId()));
-
-        order.setTotalPrice(order.getTotalPrice() - orderItems.stream()
-                .filter(orderItem -> orderItem.getItemId().toString()
-                        .equals(manageOrderItemRequestDto.getItemId()))
+        OrderItem orderItem = orderItems.stream()
+                .filter(oi -> oi.getItem().getId().equals(itemId))
                 .findFirst()
-                .map(orderItem -> orderItem.getQuantity()
-                        * itemService.getItemById(orderItem.getItemId()).getPrice())
-                .get()
+                .orElseThrow(() -> new ItemNotFoundException(itemId.toString()));
+
+        BigDecimal newTotalPrice = order.getTotalPrice().subtract(
+                orderItem.getItem().getPrice()
+                        .multiply(BigDecimal.valueOf(orderItem.getQuantity()))
         );
+        order.setTotalPrice(newTotalPrice);
 
-        orderItems.removeIf(orderItem -> orderItem
-                .getItemId().toString()
-                .equals(manageOrderItemRequestDto.getItemId()));
-        order.setOrderItems(orderItems);
+        orderItems.remove(orderItem);
 
-        return orderRepository.saveOrder(order);
+        log.info("OrderItem with id '{}' has been removed from Order with id '{}'",
+                orderItem.getId(),
+                order.getId());
+        return orderRepository.save(order);
     }
 
     @Override
     public void deleteOrderById(UUID id) {
-        orderRepository.deleteOrderById(id);
+        orderRepository.deleteById(id);
     }
 }

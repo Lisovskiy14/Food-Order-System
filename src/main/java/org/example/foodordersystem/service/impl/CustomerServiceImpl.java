@@ -17,26 +17,22 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<Customer> getAllCustomers() {
-        return customerRepository.getAllCustomers();
+        return customerRepository.findAll();
     }
 
     @Override
     public Customer getCustomerById(UUID id) {
-        Customer customer = customerRepository.getCustomerById(id);
-        if (customer == null) {
-            throw new CustomerNotFoundException(id.toString());
-        }
-        return customer;
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new CustomerNotFoundException(id.toString()));
     }
 
     @Override
-    public Customer saveCustomer(Customer customer) {
-        customer.setId(UUID.randomUUID());
-        return customerRepository.saveCustomer(customer);
+    public Customer createCustomer(Customer customer) {
+        return customerRepository.save(customer);
     }
 
     @Override
     public void deleteCustomerById(UUID id) {
-        customerRepository.deleteCustomerById(id);
+        customerRepository.deleteById(id);
     }
 }

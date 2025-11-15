@@ -46,7 +46,7 @@ public class ItemController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(itemMapper.toItemResponseDto(
-                        itemService.saveItem(item)));
+                        itemService.createItem(item)));
     }
 
     @PutMapping

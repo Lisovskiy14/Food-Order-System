@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface ItemService {
     List<Item> getAllItems();
     Item getItemById(UUID id);
-    Item saveItem(Item item);
+    Item createItem(Item item);
     Item updateItem(ItemUpdateRequestDto itemUpdateRequestDto);
     void deleteItemById(UUID id);
 }

@@ -2,7 +2,6 @@ package org.example.foodordersystem.web;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.foodordersystem.domain.Order;
 import org.example.foodordersystem.dto.order.ManageOrderItemRequestDto;
 import org.example.foodordersystem.dto.order.OrderListResponseDto;
 import org.example.foodordersystem.dto.order.OrderRequestDto;
@@ -55,7 +54,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(orderMapper.toOrderResponseDto(
-                        orderService.saveOrder(orderRequestDto)));
+                        orderService.createOrder(orderRequestDto)));
     }
 
     @PatchMapping("/add-item")
