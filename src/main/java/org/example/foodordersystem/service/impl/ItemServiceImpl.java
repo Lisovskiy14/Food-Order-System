@@ -1,6 +1,7 @@
 package org.example.foodordersystem.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.foodordersystem.domain.Item;
 import org.example.foodordersystem.dto.item.ItemUpdateRequestDto;
 import org.example.foodordersystem.service.ItemService;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
 
@@ -33,7 +35,10 @@ public class ItemServiceImpl implements ItemService {
         if (itemRepository.existsByName(item.getName())) {
             throw new ItemNameAlreadyExistsException(item.getName());
         }
-        return itemRepository.save(item);
+
+        Item savedItem = itemRepository.save(item);
+        log.info("New Item with id '{}' has been created'", savedItem.getId());
+        return savedItem;
     }
 
     @Override
@@ -47,11 +52,14 @@ public class ItemServiceImpl implements ItemService {
             item.setPrice(itemUpdateRequestDto.getPrice());
         }
 
-        return itemRepository.save(item);
+        Item savedItem = itemRepository.save(item);
+        log.info("Item with id '{}' has been updated'", savedItem.getId());
+        return savedItem;
     }
 
     @Override
     public void deleteItemById(UUID id) {
         itemRepository.deleteById(id);
+        log.info("Item with id '{}' has been deleted", id);
     }
 }

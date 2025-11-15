@@ -88,8 +88,9 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalPrice(totalPrice);
 
+        Order savedOrder = orderRepository.save(order);
         log.info("New Order with id '{}' has been created'", order.getId());
-        return orderRepository.save(order);
+        return savedOrder;
     }
 
     @Override
@@ -116,8 +117,9 @@ public class OrderServiceImpl implements OrderService {
                         BigDecimal.valueOf(manageOrderItemRequestDto.getQuantity())))
         );
 
+        Order savedOrder = orderRepository.save(order);
         log.info("New OrderItem has been added to Order with id '{}'", order.getId());
-        return orderRepository.save(order);
+        return savedOrder;
     }
 
     @Override
@@ -142,14 +144,16 @@ public class OrderServiceImpl implements OrderService {
 
         orderItems.remove(orderItem);
 
+        Order savedOrder = orderRepository.save(order);
         log.info("OrderItem with id '{}' has been removed from Order with id '{}'",
                 orderItem.getId(),
                 order.getId());
-        return orderRepository.save(order);
+        return savedOrder;
     }
 
     @Override
     public void deleteOrderById(UUID id) {
         orderRepository.deleteById(id);
+        log.info("Order with id '{}' has been deleted", id);
     }
 }

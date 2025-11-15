@@ -1,6 +1,7 @@
 package org.example.foodordersystem.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.foodordersystem.domain.Customer;
 import org.example.foodordersystem.service.CustomerService;
 import org.example.foodordersystem.service.exception.CustomerNotFoundException;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
@@ -28,11 +30,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
+        Customer savedCustomer = customerRepository.save(customer);
+        log.info("New Customer with id '{}' has been created'", savedCustomer.getId());
+        return savedCustomer;
     }
 
     @Override
     public void deleteCustomerById(UUID id) {
         customerRepository.deleteById(id);
+        log.info("Customer with id '{}' has been deleted", id);
     }
 }

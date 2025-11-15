@@ -1,6 +1,7 @@
 package org.example.foodordersystem.web;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.foodordersystem.service.exception.ItemNameAlreadyExistsException;
 import org.example.foodordersystem.service.exception.ResourceNotFoundException;
 import org.example.foodordersystem.util.ProblemDetailBuilder;
 import org.example.foodordersystem.web.exception.ParamsValidationDetails;
@@ -52,12 +53,28 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         ProblemDetail problemDetail = ProblemDetailBuilder.builder()
                 .status(HttpStatus.NOT_FOUND)
-                .type("urn:problem-type:resource-not-found")
+                .type("urn:problem-type:not-found")
                 .title("Resource Not Found")
                 .detail(ex.getMessage())
                 .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(problemDetail);
+    }
+
+    @ExceptionHandler(ItemNameAlreadyExistsException.class)
+    public ResponseEntity<Object> handleItemNameAlreadyExists(ItemNameAlreadyExistsException ex) {
+        log.info("Item Name Already Exists has occurred");
+        
+        ProblemDetail problemDetail = ProblemDetailBuilder.builder()
+                .status(HttpStatus.CONFLICT)
+                .type("urn:problem-type:conflict-error")
+                .title("Item Name Already Exists")
+                .detail(ex.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(problemDetail);
     }

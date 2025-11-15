@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Value;
 
+import java.math.BigDecimal;
+
 
 @Value
 public class ItemUpdateRequestDto {
@@ -17,5 +19,5 @@ public class ItemUpdateRequestDto {
     String description;
 
     @DecimalMin(value = "0.01", message = "must be greater than 0")
-    Double price;
+    BigDecimal price;
 }
